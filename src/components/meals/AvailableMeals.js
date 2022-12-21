@@ -7,10 +7,16 @@ import styles from './AvailableMeals.module.css';
 
 const AvailableMeals = () => {
   const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState();
 
   useEffect(() => {
     const fetchMeals = async () => {
       const response = await fetch('https://food-order-a7fd8-default-rtdb.firebaseio.com/meals.json');
+
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
+      }
       const responseData = await response.json();
 
       const loadedMeals = [];
@@ -25,9 +31,12 @@ const AvailableMeals = () => {
       }
 
       setMeals(loadedMeals);
+      setIsLoading(false);
     };
-
-    fetchMeals();
+    fetchMeals().catch((error) => {
+      setIsLoading(false);
+      setError(error.message);
+    });
   }, []);
 
   const mealsList = meals.map((meal) => (
@@ -38,6 +47,22 @@ const AvailableMeals = () => {
       description={meal.description}
       price={meal.price}
     />));
+
+  if (isLoading) {
+    return (
+      <section className={styles.mealsLoading}>
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className={styles.mealsError}>
+        <p>{error}</p>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.meals}>
